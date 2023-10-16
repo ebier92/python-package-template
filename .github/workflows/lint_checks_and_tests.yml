@@ -1,0 +1,59 @@
+# -- Run lint checks and unit tests -- #
+# Runs routine lint checks for syntax and formatting as well as unit tests across multiple
+# Python versions. By default, the job runs on pushes to main and development or on any
+# pull requests into development.
+# ------------------ #
+# Jobs:
+#
+# syntax_lint_and_unit_tests: Checks out code, installs the requested Python version,
+#   installs dependencies, runs syntax linting with flake8, and runs unit tests with pytest.
+#
+# formatting_lint: Parallel job to perform formatting/style linting. Checks out code and
+#   uses the official Black Github workflow to check that code meets Black formatting
+#   standards.
+
+name: Run lint checks and unit tests
+
+on:
+  push:
+    branches:
+      ["main", "development"]
+  pull_request:
+    branches:
+      ["development"]
+
+jobs:
+  syntax_lint_and_unit_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest pytest-mock
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Run unit tests
+      run: |
+        pytest
+  formatting_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Lint with Black
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+          src: "./src"

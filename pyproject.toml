@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "packagename"
+version = "1.0.0"
+authors = [
+  { name="Author Name" },
+]
+description = "Package description."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/user/packagename"
+"Bug Tracker" = "https://github.com/user/packagename/issues"
+
+[tool.pytest.ini_options]
+pythonpath = "src"

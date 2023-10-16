@@ -1,0 +1,92 @@
+# -- Release -- #
+# Automates the process of creating a Github release as well as publishing a package
+# build to PyPi. By default, the workflow runs any time the "Run lint checks and unit tests"
+# has suceeded on main, indicating a new push to main.
+# ------------------ #
+# Jobs:
+#
+# get_last_commit_message: Checks out code and retrieves the last commit message. If the message
+# contains the string "Skip release", the rest of the jobs in the workflow are skipped.
+#
+# create_release: Checks out code, builds a changelog for a release description based on merged
+# PR's from between the last two repo tags, gets the latest repo tag name, and creates a new Github
+# release based on the latest tag. The file "changelog_configuration.json" is used to customize the
+# changelog.
+#
+# build_and_publish_package: Checks out code, installs Python, installs build dependencies, builds
+# the package, and publishes it to PyPi. This job assumes that the project has already been set up
+# on PyPi and that this workflow has been set up as a trusted publisher.
+
+
+name: Release
+
+on:
+    workflow_run:
+        workflows: [Run lint checks and unit tests]
+        types: [completed]
+        branches: [main]
+
+jobs:
+  get_last_commit_message:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      last_commit_message: ${{ steps.get_last_commit_message.outputs.last_commit_message }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Get last commit message
+        id: get_last_commit_message
+        run: echo "last_commit_message=$(git show -s --format=%s)" >> $GITHUB_OUTPUT
+  create_release:
+    runs-on: ubuntu-latest
+    needs: get_last_commit_message
+    if: ${{ !contains(needs.get_last_commit_message.outputs.last_commit_message, 'Skip release') }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Build changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v3
+        with:
+          configuration: ".github/workflows/changelog_configuration.json"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get latest version tag
+        id: get_latest_tag
+        run: echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+      - uses: mikepenz/action-gh-release@v0.3.0
+        with:
+          body: ${{ steps.build_changelog.outputs.changelog }}
+          tag_name: ${{ steps.get_latest_tag.outputs.latest_tag }}
+  build_and_publish_package:
+    runs-on: ubuntu-latest
+    needs: create_release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+    - name: Build package
+      run: python -m build
+    - name: Publish to PyPi
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # Uncomment to publish to Test PyPi.
+      # with:
+      #   repository-url: https://test.pypi.org/legacy/
