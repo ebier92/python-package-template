@@ -27,8 +27,8 @@ Two Python scripts are available to manage releases and merges into `main`. Beca
 - Merges `main` into `development` so histories are fully synced.
 - Workflows pick up after the script runs to generate the release.
 
-`scripts/merge_without_release.py` merges `development` into `main` without triggering a release by enforcing a merge commit with the "skip release" message, which causes the release jobs to skip. This is useful for merging changes into `main` that don't necessarily need to trigger a new release such as updates to tests, docs, or workflows.
-- Merges `development` into `main` with a "skip release" merge commit message.
+`scripts/merge_without_release.py` merges `development` into `main` without triggering a release by enforcing a merge commit with the "[skip release]" message, which causes the release jobs to skip. This is useful for merging changes into `main` that don't necessarily need to trigger a new release such as updates to tests, docs, or workflows.
+- Merges `development` into `main` with a "[skip release]" merge commit message.
 - Merges `main` into `development` so histories are fully synced.
 
 ## Github Workflows
@@ -37,7 +37,7 @@ Two Github workflows are included to manage testing, linting, and automatic crea
 
 `.github/workflows/lint_checks_and_tests.yml` runs lint checks and unit tests that runs on pushs to `main` or `development`, or on open pull requests into `development`. The workflow performs linting for syntax with `flake8` and for formatting using `Black`. Unit tests are run using `pytest` (`pytest-mock` is included in the dependency installation step if needed but can be removed).
 
-`.github/workflows/release.yml` manages the automatic creation and publishing of releases that runs on successful completion of the `lint_checks_and_tests` workflow on `main`. The workflow will skip if "skip release" is found in the last commit message and will proceed otherwise. 
+`.github/workflows/release.yml` manages the automatic creation and publishing of releases that runs on successful completion of the `lint_checks_and_tests` workflow on `main`. The workflow will skip if "[skip release]" is found in the last commit message and will proceed otherwise. 
 
 This workflow generates a changelog based on PR's merged between the last two more recent repo tags and categorizes PR's based on their labels. The format and categorization of the changelog is fully customizable within `changelog_configuration.json`. More information about how to customize this file can be found [here](https://github.com/mikepenz/release-changelog-builder-action#configuration-specification). Once the changelog is generated, the latest repo tag is pulled and used to create a release entry in Github. The changelog is passed into the release description.
 

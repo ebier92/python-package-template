@@ -6,7 +6,7 @@
 # Jobs:
 #
 # get_last_commit_message: Checks out code and retrieves the last commit message. If the message
-# contains the string "Skip release", the rest of the jobs in the workflow are skipped.
+# contains the string "[skip release]", the rest of the jobs in the workflow are skipped.
 #
 # create_release: Checks out code, builds a changelog for a release description based on merged
 # PR's from between the last two repo tags, gets the latest repo tag name, and creates a new Github
@@ -43,7 +43,7 @@ jobs:
   create_release:
     runs-on: ubuntu-latest
     needs: get_last_commit_message
-    if: ${{ !contains(needs.get_last_commit_message.outputs.last_commit_message, 'Skip release') }}
+    if: ${{ !contains(needs.get_last_commit_message.outputs.last_commit_message, '[skip release]') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
