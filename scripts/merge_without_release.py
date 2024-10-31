@@ -3,7 +3,7 @@ by including "[skip release]" in the merge commit message. Useful for merging th
 need to trigger a new build and published release such as updates to docs, tests, or CI/CD jobs.
 """
 
-import os
+import subprocess
 
 print(
     "You are about to merge the development branch into main. "
@@ -34,9 +34,9 @@ git_commands = (
 )
 
 for command in git_commands:
-    command_failure = os.system(command)
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-    if command_failure:
+    if process.returncode != 0:
         raise RuntimeError(
             f"ERROR: Git command '{command}' failed to execute successfully."
         )

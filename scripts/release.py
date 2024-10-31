@@ -6,8 +6,8 @@ the `lint_checks_and_tests.yml` job to run on main which in turn triggers a run 
 """
 
 import argparse
-import os
 import re
+import subprocess
 from typing import Sequence
 
 TARGET_PROJECT_FILE = "pyproject.toml"
@@ -23,9 +23,9 @@ def _project_file_version_updater(project_file_contents: str, new_version: str):
 
 def _execute_commands(commands: Sequence[str]):
     for command in commands:
-        command_failure = os.system(command)
+        process = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-        if command_failure:
+        if process.returncode != 0:
             raise RuntimeError(
                 f"ERROR: Git command '{command}' failed to execute successfully."
             )
