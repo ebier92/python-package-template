@@ -60,7 +60,7 @@ jobs:
       - name: Get latest version tag
         id: get_latest_tag
         run: echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-      - uses: mikepenz/action-gh-release@v0.3.0
+      - uses: mikepenz/action-gh-release@v1
         with:
           body: ${{ steps.build_changelog.outputs.changelog }}
           tag_name: ${{ steps.get_latest_tag.outputs.latest_tag }}
